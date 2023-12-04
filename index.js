@@ -27,7 +27,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    //await client.connect();
 
     const classCollection = client.db("eduMentor").collection("allClass");
     const userCollection = client.db("eduMentor").collection("users");
@@ -114,7 +114,11 @@ async function run() {
     })
 
     // teacher Request Api
-
+    app.get('/requests', async (req, res) => {
+      const cursor = requestCollection.find();
+      const result = await cursor.toArray();
+      res.send(result)
+    })
     app.post('/requests', async (req, res) => {
       const newFood = req.body
       console.log(newFood)
@@ -168,7 +172,7 @@ async function run() {
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const updatedClass = req.body;
-      
+
       const sClass = {
         $set: {
           title: updatedClass.title,
@@ -205,6 +209,18 @@ async function run() {
       res.send(result);
     })
 
+    app.patch('/users/instructor/:email', async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email }; // Assuming your user documents have an 'email' field
+      const updateDoc = {
+        $set: {
+          role: 'instructor'
+        },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+    
     app.get('/users/instructor/:email', async (req, res) => {
       const email = req.params.email;
       const query = { email: email }
@@ -213,11 +229,6 @@ async function run() {
       const result = { instructor: user?.role === 'instructor' }
       res.send(result)
     })
-
-
-
-
-
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
